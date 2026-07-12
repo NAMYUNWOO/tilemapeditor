@@ -1,5 +1,5 @@
 // 오프라인 지원: 네트워크 우선, 실패 시 캐시 (iPad에서 오프라인 작업 가능)
-const CACHE = 'tilemapeditor-v1';
+const CACHE = 'tilemapeditor-v2';
 const ASSETS = [
   './',
   'index.html',

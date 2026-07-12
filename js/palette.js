@@ -8,6 +8,7 @@ export class Palette {
     this.filterTagId = null;
     this.drag = null; // {pointerId, start:{x,y}}
     this.scale = 1;
+    this.zoom = null; // null = 자동 (타일이 최소 ~28px로 보이도록)
 
     canvas.addEventListener('pointerdown', e => this.onDown(e));
     canvas.addEventListener('pointermove', e => this.onMove(e));
@@ -79,21 +80,45 @@ export class Palette {
     return { w, h, gids };
   }
 
+  // 타일이 화면에서 최소 ~28px로 보이는 확대 배율 (1배 미만으로는 줄이지 않음)
+  autoZoom() {
+    const ts = this.ts();
+    const wrapW = this.canvas.parentElement.clientWidth || 300;
+    const baseScale = wrapW / ts.imageWidth;
+    return Math.min(8, Math.max(1, 28 / (ts.tileWidth * baseScale)));
+  }
+
+  setZoom(z) {
+    if (!this.ts()) return;
+    if (!Number.isFinite(z)) z = this.autoZoom();
+    this.zoom = Math.min(12, Math.max(1, z));
+    this.render();
+  }
+
   render() {
     const ts = this.ts();
     const img = this.app.tilesetImage;
     const c = this.canvas, ctx = this.ctx;
     if (!ts || !img) {
       c.width = 1; c.height = 1;
-      c.style.height = '0px';
+      c.style.width = c.style.height = '0px';
+      this.app.onPaletteZoom?.(null);
       return;
     }
     const wrapW = c.parentElement.clientWidth || 300;
-    const dpr = window.devicePixelRatio || 1;
-    this.scale = wrapW / ts.imageWidth;
+    if (this.zoom == null) this.zoom = this.autoZoom();
+    this.scale = (wrapW / ts.imageWidth) * this.zoom;
+    // iOS 캔버스 크기 제한 보호: 백킹스토어가 8192px를 넘지 않도록 dpr 축소
+    const dpr = Math.min(
+      window.devicePixelRatio || 1,
+      8192 / (ts.imageWidth * this.scale),
+      8192 / (ts.imageHeight * this.scale),
+    );
     c.width = Math.round(ts.imageWidth * this.scale * dpr);
     c.height = Math.round(ts.imageHeight * this.scale * dpr);
+    c.style.width = (ts.imageWidth * this.scale) + 'px';
     c.style.height = (ts.imageHeight * this.scale) + 'px';
+    this.app.onPaletteZoom?.(Math.round(ts.tileWidth * this.scale));
 
     const s = this.scale * dpr;
     ctx.imageSmoothingEnabled = false;

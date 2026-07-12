@@ -129,6 +129,10 @@ app.onStampChange = () => {
   app.editor?.requestRender();
 };
 
+app.onPaletteZoom = tilePx => {
+  $('palZoomLabel').textContent = tilePx ? `타일 ${tilePx}px` : '';
+};
+
 app.updateStatus = () => {
   const el = $('status');
   const p = app.project;
@@ -233,6 +237,10 @@ $('tilesetFile').addEventListener('change', async e => {
   e.target.value = '';
 });
 
+$('palZoomIn').addEventListener('click', () => app.palette.setZoom(app.palette.zoom * 1.4));
+$('palZoomOut').addEventListener('click', () => app.palette.setZoom(app.palette.zoom / 1.4));
+$('palZoomFit').addEventListener('click', () => app.palette.setZoom(1));
+
 $('tilesetForm').addEventListener('submit', e => {
   e.preventDefault();
   if (!app.tilesetImage) { alert('먼저 타일셋 이미지를 선택하세요.'); return; }
@@ -249,6 +257,7 @@ function applyTilesetForm(name) {
   $('tsInfo').textContent = `${ts.columns} × ${ts.rows} = 타일 ${ts.columns * ts.rows}개`;
   $('editorHint').classList.add('hidden');
   $('tileTagRow').classList.remove('hidden');
+  app.palette.zoom = null; // 새 타일 크기에 맞춰 자동 확대 재계산
   app.palette.setSel?.(0, 0, 0, 0);
   app.palette.render();
   app.onStampChange();
@@ -567,6 +576,7 @@ async function setProject(p, blob) {
   app.activeLayer = 0;
   app.history.clear();
   app.palette.filterTagId = null;
+  app.palette.zoom = null;
 
   $('projName').value = p.name;
   $('mapW').value = p.map.width;

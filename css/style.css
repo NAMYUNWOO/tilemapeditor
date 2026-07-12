@@ -93,9 +93,12 @@ input[type=number],input[type=text]{
 .btnrow .btn{flex:1;}
 
 /* ── 팔레트 ── */
-#paletteWrap{margin-top:10px; max-height:44vh; overflow-y:auto; border:1px solid var(--line);
+#palZoomRow{display:flex; align-items:center; gap:4px; margin-top:10px;}
+#palZoomRow .tb{background:var(--panel2); border:1px solid var(--line); font-size:16px;}
+#palZoomLabel{flex:1; text-align:center; margin:0;}
+#paletteWrap{margin-top:8px; max-height:44vh; overflow:auto; border:1px solid var(--line);
   border-radius:8px; background:#101017; -webkit-overflow-scrolling:touch;}
-#palette{display:block; width:100%; touch-action:pan-y;}
+#palette{display:block; touch-action:pan-x pan-y;}
 #tileTagChips{display:flex; flex-wrap:wrap; gap:6px; margin:6px 0;}
 .chip{display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:99px;
   background:var(--panel2); border:1px solid var(--line); font-size:12px;}
