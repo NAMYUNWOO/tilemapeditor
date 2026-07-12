@@ -1,0 +1,15 @@
+{
+  "name": "타일맵 에디터",
+  "short_name": "TileMap",
+  "description": "로그라이크용 타일맵 에디터 — iPad/iPhone + Apple Pencil",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#16161c",
+  "theme_color": "#16161c",
+  "icons": [
+    { "src": "icons/icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

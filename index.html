@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#16161c">
+<title>타일맵 에디터</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="topbar">
+  <button id="btnMenu" class="tb" title="패널 열기/닫기">☰</button>
+  <div id="toolbar">
+    <button class="tb tool active" data-tool="brush" title="브러시 (B)">🖌️</button>
+    <button class="tb tool" data-tool="erase" title="지우개 (E)">🧹</button>
+    <button class="tb tool" data-tool="fill" title="채우기 (G)">🪣</button>
+    <button class="tb tool" data-tool="rect" title="사각형 (R)">▦</button>
+    <button class="tb tool" data-tool="picker" title="스포이드 (I)">💉</button>
+    <button class="tb tool" data-tool="pan" title="이동 (H)">✋</button>
+  </div>
+  <div id="eraserSizes" class="hidden">
+    <button class="tb esize active" data-size="1">1</button>
+    <button class="tb esize" data-size="2">2</button>
+    <button class="tb esize" data-size="3">3</button>
+    <button class="tb esize" data-size="5">5</button>
+  </div>
+  <div class="spacer"></div>
+  <button id="btnFinger" class="tb" title="손가락으로 그리기 (끄면: 손가락=이동, 펜슬=그리기)">☝️</button>
+  <button id="btnGrid" class="tb active" title="격자 표시">⊞</button>
+  <button id="btnUndo" class="tb" title="실행 취소 (⌘Z)">↩️</button>
+  <button id="btnRedo" class="tb" title="다시 실행 (⇧⌘Z)">↪️</button>
+  <button id="btnZoomOut" class="tb" title="축소">−</button>
+  <button id="btnZoomIn" class="tb" title="확대">＋</button>
+  <button id="btnFit" class="tb" title="화면에 맞추기">⤢</button>
+</header>
+
+<main>
+  <aside id="sidebar">
+    <nav id="tabs">
+      <button data-tab="tileset" class="active">타일셋</button>
+      <button data-tab="tags">태그</button>
+      <button data-tab="map">맵</button>
+    </nav>
+
+    <section id="tab-tileset" class="tab active">
+      <div class="notice">🔒 타일셋 이미지는 <b>이 기기의 브라우저에만</b> 저장됩니다. 서버 전송·저장소 커밋 없음 (유료 에셋 보호).</div>
+      <label class="filebtn">📂 타일셋 이미지 선택
+        <input type="file" id="tilesetFile" accept="image/*" hidden>
+      </label>
+      <div id="tilesetName" class="hint"></div>
+      <form id="tilesetForm" autocomplete="off">
+        <div class="grid2">
+          <label>타일 가로(px)<input type="number" id="tsW" value="16" min="1"></label>
+          <label>타일 세로(px)<input type="number" id="tsH" value="16" min="1"></label>
+          <label>여백 margin(px)<input type="number" id="tsMargin" value="0" min="0"></label>
+          <label>간격 spacing(px)<input type="number" id="tsSpacing" value="0" min="0"></label>
+        </div>
+        <button type="submit" class="btn primary">타일셋 적용</button>
+      </form>
+      <div id="tsInfo" class="hint"></div>
+      <div id="paletteWrap"><canvas id="palette"></canvas></div>
+      <div id="selInfo" class="hint"></div>
+      <div id="tileTagRow" class="hidden">
+        <div id="tileTagChips"></div>
+        <button id="btnAssignTags" class="btn">🏷️ 선택 타일에 태그 지정</button>
+      </div>
+    </section>
+
+    <section id="tab-tags" class="tab">
+      <button id="btnTagHand" class="btn primary">✍️ 손글씨로 태그 추가</button>
+      <button id="btnTagText" class="btn">⌨️ 텍스트로 태그 추가</button>
+      <ul id="tagList"></ul>
+      <p class="hint">태그를 탭하면 해당 태그가 붙은 타일이 팔레트에서 하이라이트됩니다. 태그는 내보내기 JSON에 포함되어 게임 로직(벽/바닥/문 등)에 사용할 수 있습니다.</p>
+    </section>
+
+    <section id="tab-map" class="tab">
+      <h3>맵 크기</h3>
+      <form id="mapSizeForm" autocomplete="off">
+        <div class="grid2">
+          <label>가로(타일)<input type="number" id="mapW" value="40" min="1" max="1000"></label>
+          <label>세로(타일)<input type="number" id="mapH" value="30" min="1" max="1000"></label>
+        </div>
+        <button type="submit" class="btn">크기 적용</button>
+      </form>
+
+      <h3>레이어</h3>
+      <ul id="layerList"></ul>
+      <button id="btnAddLayer" class="btn">＋ 레이어 추가</button>
+
+      <h3>프로젝트</h3>
+      <label>이름<input type="text" id="projName"></label>
+      <div class="btnrow">
+        <button id="btnNewProj" class="btn">새 프로젝트</button>
+        <button id="btnOpenProj" class="btn">프로젝트 목록</button>
+      </div>
+
+      <h3>내보내기 / 가져오기</h3>
+      <button id="btnExportJson" class="btn primary">⬇️ 맵 JSON 내보내기 (이미지 제외)</button>
+      <button id="btnExportFull" class="btn warn">⬇️ 개인 백업 (이미지 포함 ⚠️)</button>
+      <label class="filebtn">⬆️ JSON 가져오기
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </label>
+      <div id="saveStatus" class="hint"></div>
+    </section>
+  </aside>
+
+  <section id="editorWrap">
+    <canvas id="editor"></canvas>
+    <div id="status"></div>
+    <div id="editorHint" class="hidden">👈 왼쪽 패널에서 타일셋 이미지를 불러오세요</div>
+  </section>
+</main>
+
+<div id="modalRoot" class="hidden"></div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
