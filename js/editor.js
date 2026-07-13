@@ -1,6 +1,6 @@
 // 맵 캔버스 에디터: 도구 적용 + 팬/핀치줌.
 // 기본 모드: Apple Pencil(pen)/마우스 = 그리기, 손가락 = 이동/줌. (☝️ 토글로 손가락 그리기 허용)
-import { EMPTY, mod } from './model.js';
+import { EMPTY, mod, GID_MASK, orientMatrix } from './model.js';
 
 const MIN_SCALE = 0.2, MAX_SCALE = 24;
 
@@ -267,9 +267,20 @@ export class Editor {
   }
 
   drawTile(ctx, ts, img, gid, dx, dy) {
-    const sx = ts.margin + (gid % ts.columns) * (ts.tileWidth + ts.spacing);
-    const sy = ts.margin + Math.floor(gid / ts.columns) * (ts.tileHeight + ts.spacing);
-    ctx.drawImage(img, sx, sy, ts.tileWidth, ts.tileHeight, dx, dy, ts.tileWidth, ts.tileHeight);
+    const base = gid & GID_MASK;
+    const sx = ts.margin + (base % ts.columns) * (ts.tileWidth + ts.spacing);
+    const sy = ts.margin + Math.floor(base / ts.columns) * (ts.tileHeight + ts.spacing);
+    const tw = ts.tileWidth, th = ts.tileHeight;
+    const m = orientMatrix(gid);
+    if (!m) {
+      ctx.drawImage(img, sx, sy, tw, th, dx, dy, tw, th);
+      return;
+    }
+    ctx.save();
+    ctx.translate(dx + tw / 2, dy + th / 2);
+    ctx.transform(m[0], m[2], m[1], m[3], 0, 0);
+    ctx.drawImage(img, sx, sy, tw, th, -tw / 2, -th / 2, tw, th);
+    ctx.restore();
   }
 
   render() {

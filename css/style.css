@@ -28,6 +28,7 @@ body{
 .tb.active{background:var(--accent); color:#fff;}
 .tb:disabled{opacity:.35;}
 #toolbar{display:flex; gap:2px;}
+#stampOps{display:flex; gap:2px; border-left:1px solid var(--line); padding-left:4px; margin-left:2px;}
 #eraserSizes{display:flex; gap:2px;}
 #eraserSizes .tb{min-width:36px; font-size:14px; color:var(--dim);}
 #eraserSizes .tb.active{color:#fff;}

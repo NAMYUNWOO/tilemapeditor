@@ -1,4 +1,7 @@
-import { EMPTY, mod, uid, newProject, newLayer, makeTileset, resizeMap, History } from './model.js';
+import {
+  EMPTY, mod, uid, newProject, newLayer, makeTileset, resizeMap, History,
+  GID_MASK, FLIP_H, FLIP_V, FLIP_D, transformStamp,
+} from './model.js';
 import * as db from './db.js';
 import { Palette } from './palette.js';
 import { Editor } from './editor.js';
@@ -118,10 +121,39 @@ app.pickAt = cell => {
     }
   }
   if (gid >= 0) {
-    app.palette.selectGid(gid);
+    app.palette.selectGid(gid & GID_MASK); // 팔레트는 기본 타일로 선택
+    app.stamp = { w: 1, h: 1, gids: [gid] }; // 방향(뒤집기/회전)은 유지
+    updateStampBadge();
     setTool('brush');
   }
 };
+
+// 스탬프 뒤집기/회전
+function stampOp(op) {
+  if (!app.stamp || !app.project?.tileset) return;
+  const ts = app.project.tileset;
+  if (op === 'r' && ts.tileWidth !== ts.tileHeight) {
+    alert('회전은 정사각형 타일에서만 지원됩니다.');
+    return;
+  }
+  app.stamp = transformStamp(app.stamp, op);
+  if (!['brush', 'rect', 'fill'].includes(app.tool)) setTool('brush');
+  updateStampBadge();
+  app.editor.requestRender();
+}
+
+// 현재 스탬프의 방향 상태를 selInfo에 표시 (호버 미리보기가 없는 터치 환경 대비)
+function updateStampBadge() {
+  const g = app.stamp?.gids?.find(x => x >= 0);
+  if (g === undefined) return;
+  const marks = [g & FLIP_H ? '↔' : '', g & FLIP_V ? '↕' : '', g & FLIP_D ? '⤡' : ''].join('');
+  const el = $('selInfo');
+  el.textContent = el.textContent.replace(/ · 변형:.*$/, '') + (marks ? ` · 변형: ${marks}` : '');
+}
+
+$('opFlipH').addEventListener('click', () => stampOp('h'));
+$('opFlipV').addEventListener('click', () => stampOp('v'));
+$('opRotate').addEventListener('click', () => stampOp('r'));
 
 app.onStampChange = () => {
   app.stamp = app.palette.getStamp();
@@ -188,6 +220,8 @@ window.addEventListener('keydown', e => {
   }
   const keys = { b: 'brush', e: 'erase', g: 'fill', r: 'rect', i: 'picker', h: 'pan' };
   if (keys[e.key.toLowerCase()]) setTool(keys[e.key.toLowerCase()]);
+  const ops = { x: 'h', y: 'v', z: 'r' };
+  if (ops[e.key.toLowerCase()]) stampOp(ops[e.key.toLowerCase()]);
   if (e.key === '=' || e.key === '+') app.editor.zoomCenter(1.3);
   if (e.key === '-') app.editor.zoomCenter(1 / 1.3);
   if (e.key === '0') app.editor.fit();

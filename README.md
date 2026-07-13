@@ -21,6 +21,7 @@
 
 ### 맵 편집
 - 도구: 브러시 🖌️ / 지우개 🧹(크기 1·2·3·5) / 채우기 🪣 / 사각형 ▦ / 스포이드 💉 / 이동 ✋
+- 타일 뒤집기 ↔️↕️ / 90° 회전 🔄 (단축키 X·Y·Z) — 스탬프 전체에 적용, 스포이드는 방향까지 복사
 - 다중 레이어 (추가/삭제/순서/표시 토글)
 - 실행 취소/다시 실행 (⌘Z / ⇧⌘Z)
 - **Apple Pencil = 그리기, 손가락 = 화면 이동/핀치 줌** (☝️ 버튼으로 손가락 그리기 전환)
@@ -50,7 +51,20 @@
 }
 ```
 
-- gid → 타일셋 좌표: `sx = margin + (gid % columns) * (tileWidth + spacing)`, `sy = margin + floor(gid / columns) * (tileHeight + spacing)`
+- **타일 방향(뒤집기/회전)**: gid 상위 비트에 인코딩됩니다.
+
+```js
+const FLIP_H = 1 << 30;        // 좌우 뒤집기
+const FLIP_V = 1 << 29;        // 상하 뒤집기
+const FLIP_D = 1 << 28;        // 대각 뒤집기(축 교환) — 90° 회전에 사용
+const GID_MASK = (1 << 28) - 1;
+
+const baseId = gid & GID_MASK; // 타일셋 안의 실제 타일 번호
+// 렌더링: 타일 중심 기준으로 대각(축 교환) → 좌우 → 상하 순서로 적용
+// 시계 90° 회전 = FLIP_D | FLIP_H, 180° = FLIP_H | FLIP_V, 반시계 90° = FLIP_D | FLIP_V
+```
+
+- gid → 타일셋 좌표: `sx = margin + (baseId % columns) * (tileWidth + spacing)`, `sy = margin + floor(baseId / columns) * (tileHeight + spacing)`
 - **개인 백업 (이미지 포함)** — 기기 이동용. 공유 금지 ⚠️
 
 ### PWA
