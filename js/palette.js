@@ -13,7 +13,9 @@ export class Palette {
     canvas.addEventListener('pointerdown', e => this.onDown(e));
     canvas.addEventListener('pointermove', e => this.onMove(e));
     canvas.addEventListener('pointerup', e => this.onUp(e));
-    canvas.addEventListener('pointercancel', () => { this.drag = null; });
+    canvas.addEventListener('pointercancel', () => {
+      this.drag = null; this.touch = null; clearTimeout(this._longPress);
+    });
     canvas.addEventListener('contextmenu', e => e.preventDefault());
   }
 
@@ -29,27 +31,65 @@ export class Palette {
     return { x, y };
   }
 
+  // 입력 규칙 (touch-action:none — 스크롤을 직접 처리해 펜 드래그와 충돌하지 않게 함)
+  //  - 펜슬/마우스: 드래그로 사각형 다중 선택
+  //  - 손가락: 드래그=스크롤, 탭=단일 선택, 길게 누르기(350ms)=다중 선택 모드
   onDown(e) {
+    try { this.canvas.setPointerCapture(e.pointerId); } catch { /* 이미 해제된 포인터 */ }
     const t = this.tileAt(e.offsetX, e.offsetY);
-    if (!t) return;
-    // 손가락은 세로 스크롤과 충돌하므로 탭(단일 선택)만, 펜슬/마우스는 드래그 다중 선택
-    if (e.pointerType !== 'touch') {
-      this.canvas.setPointerCapture(e.pointerId);
-      e.preventDefault();
+    if (e.pointerType === 'touch') {
+      const wrap = this.canvas.parentElement;
+      this.touch = {
+        pointerId: e.pointerId, x: e.clientX, y: e.clientY,
+        sl: wrap.scrollLeft, st: wrap.scrollTop,
+        moved: false, select: false, tile: t,
+      };
+      clearTimeout(this._longPress);
+      this._longPress = setTimeout(() => {
+        if (this.touch && !this.touch.moved && this.touch.tile) {
+          this.touch.select = true;
+          const s = this.touch.tile;
+          this.setSel(s.x, s.y, s.x, s.y);
+        }
+      }, 350);
+      return;
     }
-    this.drag = { pointerId: e.pointerId, start: t, type: e.pointerType };
+    e.preventDefault();
+    if (!t) return;
+    this.drag = { pointerId: e.pointerId, start: t };
     this.setSel(t.x, t.y, t.x, t.y);
   }
 
   onMove(e) {
+    if (this.touch && this.touch.pointerId === e.pointerId) {
+      if (this.touch.select) {
+        const t = this.tileAt(e.offsetX, e.offsetY);
+        if (t) this.setSel(this.touch.tile.x, this.touch.tile.y, t.x, t.y);
+        return;
+      }
+      const dx = e.clientX - this.touch.x, dy = e.clientY - this.touch.y;
+      if (Math.abs(dx) + Math.abs(dy) > 8) this.touch.moved = true;
+      const wrap = this.canvas.parentElement;
+      wrap.scrollLeft = this.touch.sl - dx;
+      wrap.scrollTop = this.touch.st - dy;
+      return;
+    }
     if (!this.drag || this.drag.pointerId !== e.pointerId) return;
-    if (this.drag.type === 'touch') return;
     const t = this.tileAt(e.offsetX, e.offsetY);
     if (!t) return;
     this.setSel(this.drag.start.x, this.drag.start.y, t.x, t.y);
   }
 
   onUp(e) {
+    if (this.touch && this.touch.pointerId === e.pointerId) {
+      clearTimeout(this._longPress);
+      if (!this.touch.moved && !this.touch.select && this.touch.tile) {
+        const t = this.touch.tile;
+        this.setSel(t.x, t.y, t.x, t.y);
+      }
+      this.touch = null;
+      return;
+    }
     if (this.drag && this.drag.pointerId === e.pointerId) this.drag = null;
   }
 

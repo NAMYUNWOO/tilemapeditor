@@ -99,7 +99,7 @@ export class Editor {
 
   onDown(e) {
     if (!this.app.project?.tileset) return;
-    this.canvas.setPointerCapture(e.pointerId);
+    try { this.canvas.setPointerCapture(e.pointerId); } catch { /* 이미 해제된 포인터 */ }
     this.pointers.set(e.pointerId, { x: e.offsetX, y: e.offsetY, type: e.pointerType });
 
     if (e.pointerType === 'touch') {

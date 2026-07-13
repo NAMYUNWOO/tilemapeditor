@@ -428,11 +428,12 @@ $('btnAssignTags').addEventListener('click', () => {
   }).join('');
   const modal = openModal(`
     <h2>🏷️ 태그 지정 — 타일 ${gids.length}개</h2>
-    <div>${rows || '<p class="hint">태그가 없습니다. 아래에서 만들거나 ✍️ 손글씨로 추가하세요.</p>'}</div>
+    <div class="modal-scroll">${rows || '<p class="hint">태그가 없습니다. 아래에서 만들거나 ✍️ 손글씨로 추가하세요.</p>'}</div>
     <div class="row">
-      <input type="text" id="quickTag" placeholder="새 태그 이름 (펜슬 Scribble 가능)">
+      <input type="text" id="quickTag" placeholder="새 태그 이름 입력">
       <button id="quickAdd" class="btn primary">추가+지정</button>
     </div>
+    <p class="hint" style="margin:2px 0 0">입력창을 탭하면 키보드, 펜슬로 쓰면 Scribble로 입력됩니다.</p>
   `);
   modal.querySelectorAll('input[type=checkbox]').forEach(cb =>
     cb.addEventListener('change', () => {
@@ -548,7 +549,7 @@ $('btnOpenProj').addEventListener('click', async () => {
       <span class="hint">${new Date(r.updatedAt).toLocaleString()}</span>
       <button class="iconbtn pdel" data-id="${r.id}">🗑</button>
     </div>`).join('');
-  const modal = openModal(`<h2>📁 프로젝트 목록</h2>${rows || '<p class="hint">저장된 프로젝트가 없습니다.</p>'}`);
+  const modal = openModal(`<h2>📁 프로젝트 목록</h2><div class="modal-scroll">${rows || '<p class="hint">저장된 프로젝트가 없습니다.</p>'}</div>`);
   modal.querySelectorAll('.checkrow').forEach(row =>
     row.addEventListener('click', async e => {
       if (e.target.closest('.pdel')) return;
@@ -673,6 +674,18 @@ $('importFile').addEventListener('change', async e => {
 });
 
 // ─────────────────────────── 유틸/초기화 ───────────────────────────
+// iOS WebKit: user-select:none 조상 아래 입력창이 탭으로 포커스되지 않는 경우 대비
+document.addEventListener('click', e => {
+  const el = e.target.closest('input, textarea');
+  if (el && document.activeElement !== el) el.focus();
+});
+// 소프트 키보드가 올라올 때 모달 안 입력창이 가려지지 않게 스크롤
+document.addEventListener('focusin', e => {
+  if (e.target.closest('.modal') && /INPUT|TEXTAREA/.test(e.target.tagName)) {
+    setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
+  }
+});
+
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
