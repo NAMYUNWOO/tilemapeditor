@@ -1,6 +1,6 @@
 import {
   EMPTY, mod, uid, newProject, newLayer, makeTileset, resizeMap, History,
-  GID_MASK, FLIP_H, FLIP_V, FLIP_D, transformStamp,
+  GID_MASK, FLIP_H, FLIP_V, FLIP_D, transformStamp, transformGid,
 } from './model.js';
 import * as db from './db.js';
 import { Palette } from './palette.js';
@@ -16,6 +16,7 @@ const app = {
   tilesetBlob: null,  // Blob (IndexedDB 저장용, 기기 밖으로 나가지 않음)
   tool: 'brush',
   eraserSize: 1,
+  transformOp: 'r', // 변형 도구가 적용할 연산 (h/v/r)
   fingerDraws: false,
   showGrid: true,
   stamp: null,
@@ -55,6 +56,18 @@ function setCell(layerIdx, x, y, gid) {
 
 app.applyBrush = (cell, stroke) => {
   const li = app.activeLayer;
+  if (stroke.transform) {
+    // 변형 도구: 이미 놓인 타일을 그 자리에서 뒤집기/회전 (스트로크당 셀마다 1회)
+    const m = app.project.map;
+    if (cell.x < 0 || cell.y < 0 || cell.x >= m.width || cell.y >= m.height) return;
+    const i = cell.y * m.width + cell.x;
+    if (stroke.visited.has(i)) return;
+    stroke.visited.add(i);
+    const cur = m.layers[li].data[i];
+    if (cur < 0) return;
+    setCell(li, cell.x, cell.y, transformGid(cur, app.transformOp));
+    return;
+  }
   if (stroke.erase) {
     const s = app.eraserSize;
     for (let y = 0; y < s; y++)
@@ -128,18 +141,31 @@ app.pickAt = cell => {
   }
 };
 
-// 스탬프 뒤집기/회전
+// 뒤집기/회전 버튼: 변형 도구가 켜져 있으면 적용할 연산 선택, 아니면 스탬프에 즉시 적용
 function stampOp(op) {
-  if (!app.stamp || !app.project?.tileset) return;
+  if (!app.project?.tileset) return;
   const ts = app.project.tileset;
   if (op === 'r' && ts.tileWidth !== ts.tileHeight) {
     alert('회전은 정사각형 타일에서만 지원됩니다.');
     return;
   }
+  if (app.tool === 'transform') {
+    app.transformOp = op;
+    updateStampOpUI();
+    return;
+  }
+  if (!app.stamp) return;
   app.stamp = transformStamp(app.stamp, op);
   if (!['brush', 'rect', 'fill'].includes(app.tool)) setTool('brush');
   updateStampBadge();
   app.editor.requestRender();
+}
+
+// 변형 도구 활성 시 선택된 연산 버튼을 강조
+function updateStampOpUI() {
+  const isTransform = app.tool === 'transform';
+  for (const [id, op] of [['opFlipH', 'h'], ['opFlipV', 'v'], ['opRotate', 'r']])
+    $(id).classList.toggle('active', isTransform && app.transformOp === op);
 }
 
 // 현재 스탬프의 방향 상태를 selInfo에 표시 (호버 미리보기가 없는 터치 환경 대비)
@@ -180,6 +206,7 @@ function setTool(tool) {
   document.querySelectorAll('#toolbar .tool').forEach(b =>
     b.classList.toggle('active', b.dataset.tool === tool));
   $('eraserSizes').classList.toggle('hidden', tool !== 'erase');
+  updateStampOpUI();
   app.editor?.requestRender();
 }
 
@@ -218,7 +245,7 @@ window.addEventListener('keydown', e => {
     app.editor.requestRender(); scheduleSave();
     return;
   }
-  const keys = { b: 'brush', e: 'erase', g: 'fill', r: 'rect', i: 'picker', h: 'pan' };
+  const keys = { b: 'brush', e: 'erase', g: 'fill', r: 'rect', i: 'picker', h: 'pan', t: 'transform' };
   if (keys[e.key.toLowerCase()]) setTool(keys[e.key.toLowerCase()]);
   const ops = { x: 'h', y: 'v', z: 'r' };
   if (ops[e.key.toLowerCase()]) stampOp(ops[e.key.toLowerCase()]);

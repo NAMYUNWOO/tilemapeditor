@@ -208,9 +208,13 @@ export class Editor {
       this.requestRender();
       return;
     }
-    if (tool === 'brush' || tool === 'erase') {
+    if (tool === 'brush' || tool === 'erase' || tool === 'transform') {
       this.app.history.begin();
-      this.stroke = { pointerId: e.pointerId, anchor: cell, last: cell, erase: tool === 'erase' };
+      this.stroke = {
+        pointerId: e.pointerId, anchor: cell, last: cell,
+        erase: tool === 'erase', transform: tool === 'transform',
+        visited: new Set(),
+      };
       this.app.applyBrush(cell, this.stroke);
       this.requestRender();
     }
@@ -376,7 +380,7 @@ export class Editor {
         ctx.strokeStyle = '#ff7b5b';
         ctx.lineWidth = px * 2;
         ctx.strokeRect(hv.x * tw, hv.y * th, s * tw, s * th);
-      } else if (this.app.tool === 'fill' || this.app.tool === 'rect' || this.app.tool === 'picker') {
+      } else if (['fill', 'rect', 'picker', 'transform'].includes(this.app.tool)) {
         ctx.strokeStyle = 'rgba(255,255,255,.6)';
         ctx.lineWidth = px;
         ctx.strokeRect(hv.x * tw, hv.y * th, tw, th);
