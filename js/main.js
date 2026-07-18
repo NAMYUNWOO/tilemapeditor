@@ -237,6 +237,10 @@ $('btnMenu').addEventListener('click', () => document.body.classList.toggle('sid
 $('editor').addEventListener('pointerdown', () => document.body.classList.remove('sidebar-open'));
 
 window.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.body.classList.contains('tagstudio-fs') && $('modalRoot').classList.contains('hidden')) {
+    toggleTagStudio(false);
+    return;
+  }
   if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
   const mod_ = e.metaKey || e.ctrlKey;
   if (mod_ && e.key.toLowerCase() === 'z') {
@@ -301,6 +305,18 @@ $('tilesetFile').addEventListener('change', async e => {
 $('palZoomIn').addEventListener('click', () => app.palette.setZoom(app.palette.zoom * 1.4));
 $('palZoomOut').addEventListener('click', () => app.palette.setZoom(app.palette.zoom / 1.4));
 $('palZoomFit').addEventListener('click', () => app.palette.setZoom(1));
+
+// 태깅 스튜디오 전체창
+function toggleTagStudio(on) {
+  if (on && !app.project?.tileset) { alert('먼저 타일셋 이미지를 불러오세요.'); return; }
+  document.body.classList.toggle('tagstudio-fs', on);
+  document.body.classList.remove('sidebar-open');
+  // 레이아웃이 반영된 뒤 바뀐 너비에 맞춰 자동 배율로 팔레트 다시 그림
+  app.palette.zoom = null;
+  requestAnimationFrame(() => app.palette.render());
+}
+$('btnFullscreen').addEventListener('click', () => toggleTagStudio(true));
+$('btnTagStudioExit').addEventListener('click', () => toggleTagStudio(false));
 
 $('tilesetForm').addEventListener('submit', e => {
   e.preventDefault();

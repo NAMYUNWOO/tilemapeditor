@@ -70,19 +70,26 @@
         <button type="submit" class="btn primary">타일셋 적용</button>
       </form>
       <div id="tsInfo" class="hint"></div>
-      <div id="palZoomRow">
-        <button id="palZoomOut" class="tb" title="팔레트 축소">−</button>
-        <span id="palZoomLabel" class="hint"></span>
-        <button id="palZoomIn" class="tb" title="팔레트 확대">＋</button>
-        <button id="palZoomFit" class="tb" title="너비에 맞춤">⤢</button>
+      <div id="tagStudio">
+        <div id="tagStudioBar">
+          <span>🏷️ 태깅 스튜디오</span>
+          <button id="btnTagStudioExit" class="tb" title="전체창 닫기 (Esc)">✕ 닫기</button>
+        </div>
+        <div id="palZoomRow">
+          <button id="palZoomOut" class="tb" title="팔레트 축소">−</button>
+          <span id="palZoomLabel" class="hint"></span>
+          <button id="palZoomIn" class="tb" title="팔레트 확대">＋</button>
+          <button id="palZoomFit" class="tb" title="너비에 맞춤">⤢</button>
+        </div>
+        <div id="paletteWrap"><canvas id="palette"></canvas></div>
+        <div class="hint">펜슬 드래그 또는 손가락 <b>길게 누른 뒤</b> 드래그: 여러 타일 선택 · 손가락 드래그: 스크롤</div>
+        <div id="selInfo" class="hint"></div>
+        <div id="tileTagRow" class="hidden">
+          <div id="tileTagChips"></div>
+          <button id="btnAssignTags" class="btn">🏷️ 선택 타일에 태그 지정</button>
+        </div>
       </div>
-      <div id="paletteWrap"><canvas id="palette"></canvas></div>
-      <div class="hint">펜슬 드래그 또는 손가락 <b>길게 누른 뒤</b> 드래그: 여러 타일 선택 · 손가락 드래그: 스크롤</div>
-      <div id="selInfo" class="hint"></div>
-      <div id="tileTagRow" class="hidden">
-        <div id="tileTagChips"></div>
-        <button id="btnAssignTags" class="btn">🏷️ 선택 타일에 태그 지정</button>
-      </div>
+      <button id="btnFullscreen" class="btn">🖥️ 전체창으로 태깅</button>
     </section>
 
     <section id="tab-tags" class="tab">

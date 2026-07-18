@@ -105,6 +105,27 @@ input,textarea{
   border-radius:8px; background:#101017; -webkit-overflow-scrolling:touch;}
 #palette{display:block; touch-action:none;}
 #tileTagChips{display:flex; flex-wrap:wrap; gap:6px; margin:6px 0;}
+
+/* ── 태깅 스튜디오 전체창 ── */
+#tagStudioBar{display:none;}
+body.tagstudio-fs #tagStudio{
+  position:fixed; inset:0; z-index:90; margin:0; background:var(--bg);
+  display:flex; flex-direction:column; gap:8px;
+  padding:calc(8px + var(--sat)) calc(14px + var(--sar)) calc(10px + var(--sab)) calc(14px + var(--sal));
+}
+body.tagstudio-fs #tagStudioBar{
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:16px; font-weight:600; flex:0 0 auto;
+}
+body.tagstudio-fs #tagStudioBar .tb{width:auto; padding:0 14px; background:var(--panel2);
+  border:1px solid var(--line); font-size:15px;}
+body.tagstudio-fs #palZoomRow,
+body.tagstudio-fs #tileTagRow,
+body.tagstudio-fs #selInfo{flex:0 0 auto;}
+body.tagstudio-fs #paletteWrap{
+  flex:1 1 auto; max-height:none; min-height:0;
+}
+body.tagstudio-fs #tileTagRow{max-height:32vh; overflow-y:auto;}
 .chip{display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:99px;
   background:var(--panel2); border:1px solid var(--line); font-size:12px;}
 .chip .dot{width:9px; height:9px; border-radius:50%;}
